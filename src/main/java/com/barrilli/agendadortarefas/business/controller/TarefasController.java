@@ -28,7 +28,7 @@ public class TarefasController {
     public ResponseEntity<List<TarefasDTO>> buscaListaTarefasPorPeriodo(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataInicial,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFinal
-            ) {
+    ) {
         return ResponseEntity.ok(tarefasService.buscaTarefasAgendadasPorPeriodo(dataInicial, dataFinal));
     }
 
@@ -45,7 +45,7 @@ public class TarefasController {
 
     @PatchMapping
     public ResponseEntity<TarefasDTO> alteraStatusNotificacao(
-            @RequestParam("status")StatusNotificacaoEnum statusNotificacaoEnum,
+            @RequestParam("status") StatusNotificacaoEnum statusNotificacaoEnum,
             @RequestParam("id") String id) {
         return ResponseEntity.ok(tarefasService.alteraStatus(statusNotificacaoEnum, id));
     }
