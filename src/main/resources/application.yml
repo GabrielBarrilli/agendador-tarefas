@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: agendador-tarefas
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/db_agendador
+
+usuario.url: localhost:8080
+
+server:
+  port: 8081
