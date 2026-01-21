@@ -1,4 +1,4 @@
-package com.barrilli.agendadortarefas.business;
+package com.barrilli.agendadortarefas.business.dto;
 
 import lombok.*;
 

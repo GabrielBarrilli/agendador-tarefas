@@ -1,6 +1,6 @@
 package com.barrilli.agendadortarefas.infra.security;
 
-import com.barrilli.agendadortarefas.business.UsuarioDTO;
+import com.barrilli.agendadortarefas.business.dto.UsuarioDTO;
 import com.barrilli.agendadortarefas.infra.client.UsuarioClient;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
