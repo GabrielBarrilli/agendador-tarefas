@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: agendador-tarefas
+
+usuario.url: localhost:8080
