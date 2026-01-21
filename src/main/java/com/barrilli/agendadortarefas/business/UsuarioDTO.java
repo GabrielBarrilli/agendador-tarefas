@@ -2,8 +2,6 @@ package com.barrilli.agendadortarefas.business;
 
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
 @AllArgsConstructor
