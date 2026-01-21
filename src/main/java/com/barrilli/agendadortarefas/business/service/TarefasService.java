@@ -40,7 +40,7 @@ public class TarefasService {
                 tarefaRepository.findByDataEventoBetween(dataInicial, dataFinal));
     }
 
-    public List<TarefasDTO> buscaTarefasPorEmail (String token) {
+    public List<TarefasDTO> buscaTarefasPorEmail(String token) {
         String email = jwtUtil.extractUsername(token.substring(7));
 
         List<TarefasEntity> listaTarefas = tarefaRepository.findByEmailUsuario(email);
@@ -65,8 +65,8 @@ public class TarefasService {
             entity.setStatusNotificacao(statusNotificacao);
 
             return tarefasConverter.paraTarefasDTO(tarefaRepository.save(entity));
-        }catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("Erro ao alterar status da tarefa para id: " +id, e.getCause());
+        } catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("Erro ao alterar status da tarefa para id: " + id, e.getCause());
         }
     }
 
@@ -79,8 +79,8 @@ public class TarefasService {
             tarefaUpdateConverter.updateTarefas(tarefasDTO, entity);
 
             return tarefasConverter.paraTarefasDTO(tarefaRepository.save(entity));
-        }catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("Erro ao alterar tarefa para id: " +id, e.getCause());
+        } catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("Erro ao alterar tarefa para id: " + id, e.getCause());
         }
     }
 }
