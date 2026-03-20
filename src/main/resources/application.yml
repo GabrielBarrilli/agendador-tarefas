@@ -4,7 +4,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/db_agendador
+      uri: ${MONGODB_URI:mongodb://localhost:27017/agendador-tarefas}
 
 usuario.url: localhost:8080
 
