@@ -25,7 +25,8 @@ repositories {
 }
 
 ext {
-    set('springCloudVersion', "2025.1.0")
+    // Compatível com Spring Boot 3.5.x
+    set('springCloudVersion', "2025.0.0")
 }
 
 dependencies {
