@@ -10,3 +10,6 @@ usuario.url: localhost:8080
 
 server:
   port: 8081
+
+jwt:
+  secret: ${JWT_SECRET}
