@@ -2,6 +2,7 @@ package com.barrilli.agendadortarefas.infra.repository;
 
 import com.barrilli.agendadortarefas.infra.enums.StatusNotificacaoEnum;
 import com.barrilli.agendadortarefas.infra.model.TarefasEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
@@ -25,6 +26,12 @@ class TarefasRepositoryTest {
 
     @Autowired
     TarefasRepository repository;
+
+    // @DataMongoTest não desfaz as gravações: sem isso, o resultado dependeria da ordem dos testes
+    @BeforeEach
+    void limpa() {
+        repository.deleteAll();
+    }
 
     @Test
     void buscaSoPendentesDentroDoPeriodo() {

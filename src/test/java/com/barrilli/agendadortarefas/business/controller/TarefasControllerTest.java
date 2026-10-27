@@ -213,6 +213,7 @@ class TarefasControllerTest {
         mockMvc.perform(get("/internal/tarefas/pendentes").header("X-Internal-Key", "errada")
                         .param("inicio", "2026-01-10T15:00:00").param("fim", "2026-01-10T15:05:00"))
                 .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
     }
 
     @Test
