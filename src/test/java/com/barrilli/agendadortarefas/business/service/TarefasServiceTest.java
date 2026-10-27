@@ -2,6 +2,7 @@ package com.barrilli.agendadortarefas.business.service;
 
 import com.barrilli.agendadortarefas.business.dto.TarefasDTO;
 import com.barrilli.agendadortarefas.business.mapper.TarefaUpdateConverter;
+import com.barrilli.agendadortarefas.business.mapper.TarefaUpdateConverterImpl;
 import com.barrilli.agendadortarefas.business.mapper.TarefasConverter;
 import com.barrilli.agendadortarefas.infra.enums.StatusNotificacaoEnum;
 import com.barrilli.agendadortarefas.infra.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -35,8 +37,9 @@ class TarefasServiceTest {
     @Mock
     TarefasConverter converter;
 
-    @Mock
-    TarefaUpdateConverter updateConverter;
+    // MapStruct real: a proteção de id e emailUsuario no PUT mora nos @Mapping(ignore) do converter
+    @Spy
+    TarefaUpdateConverter updateConverter = new TarefaUpdateConverterImpl();
 
     @Mock
     JwtUtil jwtUtil;
@@ -148,15 +151,17 @@ class TarefasServiceTest {
     }
 
     @Test
-    void updateTarefa_doProprioUsuario_aplicaAlteracoes() {
+    void updateTarefa_doProprioUsuario_aplicaAlteracoesSemTrocarIdNemDono() {
         var tarefa = tarefaDe("ana@t.com");
-        var dto = TarefasDTO.builder().nomeTarefa("Novo nome").build();
+        var dto = TarefasDTO.builder().id("outro-id").emailUsuario("outro@t.com").nomeTarefa("Novo nome").build();
         when(repository.findById("t1")).thenReturn(Optional.of(tarefa));
         when(repository.save(tarefa)).thenReturn(tarefa);
 
         service.updateTarefa(TOKEN, dto, "t1");
 
-        verify(updateConverter).updateTarefas(dto, tarefa);
+        assertThat(tarefa.getNomeTarefa()).isEqualTo("Novo nome");
+        assertThat(tarefa.getId()).isEqualTo("t1");
+        assertThat(tarefa.getEmailUsuario()).isEqualTo("ana@t.com");
         verify(repository).save(tarefa);
     }
 
