@@ -159,6 +159,20 @@ class TarefasControllerTest {
     }
 
     @Test
+    void putEPatchEmTarefaDeOutroUsuario_retornam404() throws Exception {
+        when(tarefasService.updateTarefa(eq(AUTH), any(), eq("t1")))
+                .thenThrow(new ResourceNotFoundException("Tarefa não encontrada: t1"));
+        when(tarefasService.alteraStatus(AUTH, StatusNotificacaoEnum.CANCELADO, "t1"))
+                .thenThrow(new ResourceNotFoundException("Tarefa não encontrada: t1"));
+
+        mockMvc.perform(put("/v1/tarefas").param("id", "t1").header("Authorization", AUTH)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"nomeTarefa\":\"hack\"}"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(patch("/v1/tarefas").param("status", "CANCELADO").param("id", "t1").header("Authorization", AUTH))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void alteraStatus_retorna200() throws Exception {
         when(tarefasService.alteraStatus(AUTH, StatusNotificacaoEnum.CANCELADO, "t1"))
                 .thenReturn(TarefasDTO.builder().id("t1").statusNotificacao(StatusNotificacaoEnum.CANCELADO).build());
@@ -199,6 +213,17 @@ class TarefasControllerTest {
         mockMvc.perform(get("/internal/tarefas/pendentes").header("X-Internal-Key", "errada")
                         .param("inicio", "2026-01-10T15:00:00").param("fim", "2026-01-10T15:05:00"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rotaInterna_soComJwtValido_retorna401() throws Exception {
+        // JWT de usuário comum não substitui a chave interna
+        mockMvc.perform(get("/internal/tarefas/pendentes").header("Authorization", AUTH)
+                        .param("inicio", "2026-01-10T15:00:00").param("fim", "2026-01-10T15:05:00"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(patch("/internal/tarefas/t1/notificada").header("Authorization", AUTH))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
     }
 
     @Test
