@@ -26,6 +26,7 @@ public class TarefasService {
     public TarefasDTO gravarTarefa(String token, TarefasDTO tarefasDTO) {
         String email = jwtUtil.extractUsername(token.substring(7));
 
+        tarefasDTO.setId(null);
         tarefasDTO.setDataCriacao(LocalDateTime.now());
         tarefasDTO.setStatusNotificacao(StatusNotificacaoEnum.PENDENTE);
         tarefasDTO.setEmailUsuario(email);
@@ -48,39 +49,38 @@ public class TarefasService {
         return tarefasConverter.paraListaTarefasDTO(listaTarefas);
     }
 
-    public void deletarTarefaPorId(String id) {
-        try {
-            tarefaRepository.deleteById(id);
-        } catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("Erro ao deletar tarefas para id: " + id, e.getCause());
-        }
+    public void deletarTarefaPorId(String token, String id) {
+        tarefaRepository.delete(buscaTarefaDoUsuario(token, id));
     }
 
+    public TarefasDTO alteraStatus(String token, StatusNotificacaoEnum statusNotificacao, String id) {
+        return salvaStatus(buscaTarefaDoUsuario(token, id), statusNotificacao);
+    }
+
+    // Uso interno (job de notificação): não há usuário, então não confere o dono
     public TarefasDTO alteraStatus(StatusNotificacaoEnum statusNotificacao, String id) {
-        try {
-            var entity = tarefaRepository.findById(id)
-                    .orElseThrow(
-                            () -> new ResourceNotFoundException("Tarefa não encontrada " + id)
-                    );
-            entity.setStatusNotificacao(statusNotificacao);
-
-            return tarefasConverter.paraTarefasDTO(tarefaRepository.save(entity));
-        } catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("Erro ao alterar status da tarefa para id: " + id, e.getCause());
-        }
+        var entity = tarefaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada: " + id));
+        return salvaStatus(entity, statusNotificacao);
     }
 
-    public TarefasDTO updateTarefa(TarefasDTO tarefasDTO, String id) {
-        try {
-            var entity = tarefaRepository.findById(id)
-                    .orElseThrow(
-                            () -> new ResourceNotFoundException("Tarefa não encontrada " + id)
-                    );
-            tarefaUpdateConverter.updateTarefas(tarefasDTO, entity);
+    public TarefasDTO updateTarefa(String token, TarefasDTO tarefasDTO, String id) {
+        var entity = buscaTarefaDoUsuario(token, id);
+        tarefaUpdateConverter.updateTarefas(tarefasDTO, entity);
 
-            return tarefasConverter.paraTarefasDTO(tarefaRepository.save(entity));
-        } catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("Erro ao alterar tarefa para id: " + id, e.getCause());
-        }
+        return tarefasConverter.paraTarefasDTO(tarefaRepository.save(entity));
+    }
+
+    private TarefasDTO salvaStatus(TarefasEntity entity, StatusNotificacaoEnum statusNotificacao) {
+        entity.setStatusNotificacao(statusNotificacao);
+        return tarefasConverter.paraTarefasDTO(tarefaRepository.save(entity));
+    }
+
+    // Tarefa de outro usuário responde 404, para não revelar que o id existe
+    private TarefasEntity buscaTarefaDoUsuario(String token, String id) {
+        String email = jwtUtil.extractUsername(token.substring(7));
+        return tarefaRepository.findById(id)
+                .filter(tarefa -> tarefa.getEmailUsuario().equals(email))
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada: " + id));
     }
 }

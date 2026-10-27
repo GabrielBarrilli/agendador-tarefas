@@ -2,14 +2,16 @@ spring:
   application:
     name: agendador-tarefas
 
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/agendador-tarefas}
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/agendador-tarefas}
 
-usuario.url: localhost:8080
+usuario.url: ${USUARIO_URL:http://localhost:8080}
 
 server:
   port: 8081
 
 jwt:
   secret: ${JWT_SECRET}
+
+internal:
+  api-key: ${INTERNAL_API_KEY}
