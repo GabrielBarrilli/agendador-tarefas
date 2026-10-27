@@ -87,6 +87,28 @@ class TarefasControllerTest {
     }
 
     @Test
+    void tokenVazio_retorna401() throws Exception {
+        // É o que o JwtUtil real lança para "" (ver JwtUtilTest.tokenVazio_lancaIllegalArgument)
+        when(jwtUtil.extractUsername("")).thenThrow(new IllegalArgumentException("JWT String argument cannot be null or empty."));
+
+        mockMvc.perform(get("/v1/tarefas/email").header("Authorization", "Bearer "))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
+    }
+
+    @Test
+    void servicoDeUsuarioForaDoAr_retorna503() throws Exception {
+        when(jwtUtil.extractUsername("tok2")).thenReturn("ana@t.com");
+        var request = Request.create(Request.HttpMethod.GET, "http://usuario/v1/usuario/email", Map.of(), null, StandardCharsets.UTF_8, null);
+        when(userDetailsService.carregaDadosUsuario("ana@t.com", "Bearer tok2"))
+                .thenThrow(new FeignException.ServiceUnavailable("503", request, null, null));
+
+        mockMvc.perform(get("/v1/tarefas/email").header("Authorization", "Bearer tok2"))
+                .andExpect(status().isServiceUnavailable());
+        verifyNoInteractions(tarefasService);
+    }
+
+    @Test
     void tokenRecusadoPeloServicoDeUsuario_retorna401() throws Exception {
         when(jwtUtil.extractUsername("apagado")).thenReturn("apagado@t.com");
         var request = Request.create(Request.HttpMethod.GET, "http://usuario/v1/usuario/email", Map.of(), null, StandardCharsets.UTF_8, null);

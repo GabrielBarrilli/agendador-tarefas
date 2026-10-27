@@ -2,6 +2,7 @@ package com.barrilli.agendadortarefas.infra.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,17 @@ class JwtUtilTest {
         String token = token(SECRET, "ana@t.com", -1_000);
 
         assertThatThrownBy(() -> jwtUtil.extractUsername(token)).isInstanceOf(ExpiredJwtException.class);
+    }
+
+    @Test
+    void tokenMalformado_lancaMalformedJwt() {
+        assertThatThrownBy(() -> jwtUtil.extractUsername("lixo")).isInstanceOf(MalformedJwtException.class);
+    }
+
+    @Test
+    void tokenVazio_lancaIllegalArgument() {
+        // Não é JwtException: o JwtRequestFilter precisa capturar IllegalArgumentException também
+        assertThatThrownBy(() -> jwtUtil.extractUsername("")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

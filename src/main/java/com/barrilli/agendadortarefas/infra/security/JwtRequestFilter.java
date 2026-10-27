@@ -55,10 +55,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
-            } catch (JwtException | FeignException e) {
-                // Token expirado, malformado, com assinatura inválida, ou usuário recusado pelo serviço de usuário.
+            } catch (JwtException | IllegalArgumentException
+                     | FeignException.Unauthorized | FeignException.Forbidden | FeignException.NotFound e) {
+                // Token expirado, malformado, vazio ("Bearer " vira IllegalArgumentException no jjwt),
+                // com assinatura inválida, ou usuário recusado pelo serviço de usuário.
                 // Exceção lançada num filtro não chega ao GlobalExceptionHandler, então responde aqui.
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            } catch (FeignException e) {
+                // Serviço de usuário fora do ar ou com erro: o problema não é o token
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                 return;
             }
         }
