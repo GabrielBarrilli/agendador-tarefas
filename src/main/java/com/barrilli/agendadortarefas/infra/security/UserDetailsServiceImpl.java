@@ -19,7 +19,7 @@ public class UserDetailsServiceImpl {
         UsuarioDTO usuarioDTO = usuarioClient.buscaUsuarioPorEmail(email, token);
         return User
                 .withUsername(usuarioDTO.getEmail())
-                .password(usuarioDTO.getSenha())
+                .password("")
                 .build();
     }
 }
