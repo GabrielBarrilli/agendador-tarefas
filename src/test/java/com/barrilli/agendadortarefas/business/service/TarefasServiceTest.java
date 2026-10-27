@@ -168,4 +168,13 @@ class TarefasServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(updateConverter, never()).updateTarefas(any(), any());
     }
+
+    @Test
+    void tarefaAntigaSemEmailUsuario_lanca404ENaoNullPointer() {
+        when(repository.findById("t1")).thenReturn(Optional.of(tarefaDe(null)));
+
+        assertThatThrownBy(() -> service.deletarTarefaPorId(TOKEN, "t1"))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(repository, never()).delete(any());
+    }
 }

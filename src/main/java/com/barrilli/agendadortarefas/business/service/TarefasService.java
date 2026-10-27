@@ -80,7 +80,7 @@ public class TarefasService {
     private TarefasEntity buscaTarefaDoUsuario(String token, String id) {
         String email = jwtUtil.extractUsername(token.substring(7));
         return tarefaRepository.findById(id)
-                .filter(tarefa -> tarefa.getEmailUsuario().equals(email))
+                .filter(tarefa -> email.equals(tarefa.getEmailUsuario()))
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada: " + id));
     }
 }
