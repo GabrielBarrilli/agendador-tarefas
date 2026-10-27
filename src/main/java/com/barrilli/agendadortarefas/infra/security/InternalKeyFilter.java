@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,7 +21,9 @@ public class InternalKeyFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/internal/");
+        // Caminho decodificado, o mesmo que o Spring Security e o MVC usam: com o getRequestURI() cru,
+        // "/%69nternal/..." passava sem chave e era roteado para /internal
+        return !UrlPathHelper.defaultInstance.getPathWithinApplication(request).startsWith("/internal/");
     }
 
     @Override

@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.net.URI;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -150,6 +151,14 @@ class TarefasControllerTest {
         mockMvc.perform(get("/internal/tarefas/pendentes").header("X-Internal-Key", "errada")
                         .param("inicio", "2026-01-10T15:00:00").param("fim", "2026-01-10T15:05:00"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rotaInterna_comCaminhoCodificado_naoPulaAChave() throws Exception {
+        // "%69" é "i": o Spring decodifica e roteia para /internal, então o filtro tem que pegar também
+        mockMvc.perform(get(URI.create("/%69nternal/tarefas/pendentes?inicio=2026-01-10T15:00:00&fim=2026-01-10T15:05:00")))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
     }
 
     @Test
