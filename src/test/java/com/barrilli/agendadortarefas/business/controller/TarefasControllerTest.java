@@ -8,7 +8,10 @@ import com.barrilli.agendadortarefas.infra.security.InternalKeyFilter;
 import com.barrilli.agendadortarefas.infra.security.JwtUtil;
 import com.barrilli.agendadortarefas.infra.security.SecurityConfig;
 import com.barrilli.agendadortarefas.infra.security.UserDetailsServiceImpl;
+import feign.FeignException;
+import feign.Request;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +23,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,6 +73,27 @@ class TarefasControllerTest {
         when(jwtUtil.extractUsername("expirado")).thenThrow(new ExpiredJwtException(null, null, "expirado"));
 
         mockMvc.perform(get("/v1/tarefas/email").header("Authorization", "Bearer expirado"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
+    }
+
+    @Test
+    void tokenMalformado_retorna401() throws Exception {
+        when(jwtUtil.extractUsername("lixo")).thenThrow(new MalformedJwtException("malformado"));
+
+        mockMvc.perform(get("/v1/tarefas/email").header("Authorization", "Bearer lixo"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
+    }
+
+    @Test
+    void tokenRecusadoPeloServicoDeUsuario_retorna401() throws Exception {
+        when(jwtUtil.extractUsername("apagado")).thenReturn("apagado@t.com");
+        var request = Request.create(Request.HttpMethod.GET, "http://usuario/v1/usuario/email", Map.of(), null, StandardCharsets.UTF_8, null);
+        when(userDetailsService.carregaDadosUsuario("apagado@t.com", "Bearer apagado"))
+                .thenThrow(new FeignException.Unauthorized("401", request, null, null));
+
+        mockMvc.perform(get("/v1/tarefas/email").header("Authorization", "Bearer apagado"))
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(tarefasService);
     }
