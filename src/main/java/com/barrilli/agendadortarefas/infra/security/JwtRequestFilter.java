@@ -1,5 +1,7 @@
 package com.barrilli.agendadortarefas.infra.security;
 
+import feign.FeignException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,21 +38,34 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             // Extrai o token JWT do cabeçalho
             final String token = authorizationHeader.substring(7);
-            // Extrai o nome de usuário do token JWT
-            final String username = jwtUtil.extractUsername(token);
+            try {
+                // Extrai o nome de usuário do token JWT
+                final String username = jwtUtil.extractUsername(token);
 
-            // Se o nome de usuário não for nulo e o usuário não estiver autenticado ainda
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Carrega os detalhes do usuário a partir do nome de usuário
-                UserDetails userDetails = userDetailsServiceImpl.carregaDadosUsuario(username, authorizationHeader);
-                // Valida o token JWT
-                if (jwtUtil.validateToken(token, username)) {
-                    // Cria um objeto de autenticação com as informações do usuário
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    // Define a autenticação no contexto de segurança
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                // Se o nome de usuário não for nulo e o usuário não estiver autenticado ainda
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Carrega os detalhes do usuário a partir do nome de usuário
+                    UserDetails userDetails = userDetailsServiceImpl.carregaDadosUsuario(username, authorizationHeader);
+                    // Valida o token JWT
+                    if (jwtUtil.validateToken(token, username)) {
+                        // Cria um objeto de autenticação com as informações do usuário
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        // Define a autenticação no contexto de segurança
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
+            } catch (JwtException | IllegalArgumentException
+                     | FeignException.Unauthorized | FeignException.Forbidden | FeignException.NotFound e) {
+                // Token expirado, malformado, vazio ("Bearer " vira IllegalArgumentException no jjwt),
+                // com assinatura inválida, ou usuário recusado pelo serviço de usuário.
+                // Exceção lançada num filtro não chega ao GlobalExceptionHandler, então responde aqui.
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            } catch (FeignException e) {
+                // Serviço de usuário fora do ar ou com erro: o problema não é o token
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                return;
             }
         }
 
