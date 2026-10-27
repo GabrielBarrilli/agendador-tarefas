@@ -8,6 +8,7 @@ import com.barrilli.agendadortarefas.infra.security.InternalKeyFilter;
 import com.barrilli.agendadortarefas.infra.security.JwtUtil;
 import com.barrilli.agendadortarefas.infra.security.SecurityConfig;
 import com.barrilli.agendadortarefas.infra.security.UserDetailsServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,9 +56,18 @@ class TarefasControllerTest {
     }
 
     @Test
-    void semToken_eNegado() throws Exception {
+    void semToken_retorna401() throws Exception {
         mockMvc.perform(get("/v1/tarefas/email"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(tarefasService);
+    }
+
+    @Test
+    void tokenExpirado_retorna401() throws Exception {
+        when(jwtUtil.extractUsername("expirado")).thenThrow(new ExpiredJwtException(null, null, "expirado"));
+
+        mockMvc.perform(get("/v1/tarefas/email").header("Authorization", "Bearer expirado"))
+                .andExpect(status().isUnauthorized());
         verifyNoInteractions(tarefasService);
     }
 
